@@ -6,17 +6,30 @@ import fs, { readlinkSync } from 'fs';
 dotenv.config();
 //client.login(conf ? conf["bot-token"] : process.env.TOKEN)
 
-const CHAN_NAME = "Dota-guides";
+const GUIDES_CHAN_NAME = "Dota-guides";
+const FUN_CHAN_NAME = "Dota-fun";
 const waitTime = 3600;
 
 let cachedLinks;
 
-const channels = [
-    "bananaslamjamma",
-    "jenkins",
-    "GameLeap Dota 2 Pro Guides",
-    "GamerzClass Dota 2"
-];
+const channels = {
+
+    guides: [
+        "bananaslamjamma",
+        "jenkins",
+        "GameLeap Dota 2 Pro Guides",
+        "GamerzClass Dota 2"
+    ],
+    fun: [
+        "rizpol",
+        "elwono",
+        "elwonoccino",
+        "DotaCinema",
+        "Dota Watafak",
+        "Jenkins Clips",
+        "Dotown"
+    ]
+};
 
 let guilds;
 
@@ -26,9 +39,15 @@ client.on("ready", async () => {
     for (const guildId of guilds) {
         const guild = await client.guilds.fetch(guildId);
         let channels = await guild.channels.fetch();
-        const dotaGuides = channels.find((c) => c.type === "GUILD_TEXT" && c.name === CHAN_NAME.toLowerCase());
+        const dotaGuides = channels.find((c) => c.type === "GUILD_TEXT" && c.name === GUIDES_CHAN_NAME.toLowerCase());
         if(!dotaGuides) {
             guild.channels.create("Dota-guides", {
+                type:"GUILD_TEXT",
+            })    
+        }
+        const dotaFun = channels.find((c) => c.type === "GUILD_TEXT" && c.name === FUN_CHAN_NAME.toLowerCase());
+        if(!dotaFun) {
+            guild.channels.create("Dota-fun", {
                 type:"GUILD_TEXT",
             })    
         }
@@ -36,13 +55,13 @@ client.on("ready", async () => {
     await checkNewVideos()
 });
 
-async function postVideo(link) {
+async function postVideo(link, channelCategory) {
     for (const guildId of guilds) {
         const guild = await client.guilds.fetch(guildId);
         let channels = await guild.channels.fetch();
-        const dotaGuides = channels.find((c) => c.type === "GUILD_TEXT" && c.name === CHAN_NAME.toLowerCase());
-        console.log('sending link : ' + link)
-        dotaGuides.send(link);
+        const dotaChan = channels.find((c) => c.type === "GUILD_TEXT" && c.name === `Dota-${channelCategory}`.toLowerCase());
+        console.log('sending link : ' + link + ' to dota-' + channelCategory)
+        dotaChan.send(link);
     }
 }
 
@@ -58,13 +77,15 @@ async function getResForChannel(channel) {
 
 
 async function checkNewVideos() {
-    for (let channel of channels) {
-        let vids = await getResForChannel(channel);
-        for (let video of vids) {
-            if(!cachedLinks.includes(video.link.toLowerCase())) {
-                await postVideo(video.link);
-                cachedLinks.push(video.link.toLowerCase());
-                writeCachedLinks();
+    for (let channelCategory of Object.keys(channels)) {
+        for(let channel of channels[channelCategory]) {
+            let vids = await getResForChannel(channel);
+            for (let video of vids) {
+                if(!cachedLinks.includes(video.link.toLowerCase())) {
+                    await postVideo(video.link, channelCategory);
+                    cachedLinks.push(video.link.toLowerCase());
+                    writeCachedLinks();
+                }
             }
         }
     }
