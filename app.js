@@ -71,7 +71,8 @@ async function getResForChannel(channel) {
     const res = await youtube.search(channel, {sp: "EgIIAQ%253D%253D"});
     //day
     //const res = await youtube.search(channel, {sp: "EgQIAhAB"});
-    results = res.videos.filter((v) => v.channel.name.toLowerCase() === channel.toLowerCase());
+    const isDotaChannel = v.channel.name.toLowerCase() !== 'jenkins' || ( v.channel.name.toLowerCase() === 'jenkins' && v.channel.id === "UCTUO_3bYr50vmH0aE7byMjg" );
+    results = res.videos.filter((v) => v.channel.name.toLowerCase() === channel.toLowerCase() && isDotaChannel);
     return results;
 }
 
